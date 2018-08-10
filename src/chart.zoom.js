@@ -346,7 +346,7 @@ zoomNS.zoomCumulativeDelta = 0;
 var zoomPlugin = {
 	afterInit: function(chartInstance) {
 		helpers.each(chartInstance.scales, function(scale) {
-			scale.originalOptions = JSON.parse(JSON.stringify(scale.options));
+			scale.originalOptions = helpers.clone(scale.options);
 		});
 
 		chartInstance.resetZoom = function() {
@@ -364,8 +364,6 @@ var zoomPlugin = {
 					tickOptions.min = origOptions.ticks.min;
 					tickOptions.max = origOptions.ticks.max;
 				}
-
-				scale.options = helpers.configMerge(scale.options, scale.originalOptions);
 			});
 
 			helpers.each(chartInstance.data.datasets, function(dataset, id) {
