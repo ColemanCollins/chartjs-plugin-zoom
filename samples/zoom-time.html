@@ -18,22 +18,24 @@
 
 <body>
 	<div style="width:75%;">
-		<button onclick="resetZoom()">Reset Zoom</button>
+		Y:<button onclick="scaleY('0A')">0A</button>
+		<button onclick="scaleY('A')">A</button>
+		<button onclick="scaleY('01')">01</button>
+		<br/>
+		<br/>
+		X: <button onclick="scaleY('AX')">AX</button>
 		<canvas id="canvas"></canvas>
 	</div>
 	<script>
 		var timeFormat = 'MM/DD/YYYY HH:mm';
 
 		function randomScalingFactor() {
-			return Math.round(Math.random() * 100 * (Math.random() > 0.5 ? -1 : 1));
-		}
-
-		function randomColorFactor() {
-			return Math.round(Math.random() * 255);
+			return Math.random() * 1 * (Math.random() > 0.5 ? -1 : 1);
 		}
 
 		function randomColor(opacity) {
-			return 'rgba(' + randomColorFactor() + ',' + randomColorFactor() + ',' + randomColorFactor() + ',' + (opacity || '.3') + ')';
+			var colors = ['0,0,0', '50,50,50', '100,100,100', '150,150,150', '200,200,200']
+			return 'rgba(' + colors[Math.floor(Math.random() * 5)] + ',' + (opacity || '.3') + ')';
 		}
 
 		function newDate(days) {
@@ -48,9 +50,75 @@
 			return moment().add(days, 'd').unix();
 		}
 
-		function resetZoom() {
-			window.myLine.resetZoom()
-		}
+		function scaleY(type) {
+			const chart = window.myLine;
+			switch(type) {
+				case('01'):
+					chart.options.scales.yAxes[0].ticks.min = 0;
+					chart.options.scales.yAxes[0].ticks.max = 1;
+					chart.update({
+						duration: 400
+					});
+					break;
+				case('0A'):
+					chart.options.scales.yAxes[0].ticks.min = 0;
+					chart.options.scales.yAxes[0].ticks.max = undefined;
+					chart.update({
+						duration: 400
+					});
+					break;
+				case('AX'):
+					chart.options.scales.xAxes[0].ticks.min = undefined;
+					chart.options.scales.xAxes[0].ticks.max = undefined;
+					chart.update({
+						duration: 400
+					});
+					break;
+				case('A'):
+				default:
+					chart.options.scales.yAxes[0].ticks.min = undefined;
+					chart.options.scales.yAxes[0].ticks.max = undefined;
+					chart.update({
+						duration: 400
+					});
+					break;
+			}
+			// const chart = window.myLine;
+			// switch(type) {
+			// 	case('01'):
+			// 	window.myLine.resetZoom({
+			// 		test: {
+			// 			ticks: {
+			// 				min: 0,
+			// 				max: 1
+			// 			}
+			// 		}
+			// 	})
+			// 		break;
+			// 	case('0A'):
+			// 		window.myLine.resetZoom({
+			// 			test: {
+			// 				ticks: {
+			// 					min: 0,
+			// 					max: undefined
+			// 				}
+			// 			}
+			// 		})
+			// 		break;
+			// 	case('A'):
+			// 	default:
+			// 		window.myLine.resetZoom({
+			// 			test: {
+			// 				ticks: {
+			// 					min: undefined,
+			// 					max: undefined
+			// 				}
+			// 			}
+			// 		})
+			// 		break;
+			// }
+ 		// }
+ 		}
 
 		var config = {
 			type: 'line',
@@ -64,6 +132,7 @@
 				}, {
 					label: "My Second dataset",
 					data: [randomScalingFactor(), randomScalingFactor(), randomScalingFactor(), randomScalingFactor(), randomScalingFactor(), randomScalingFactor(), randomScalingFactor()],
+					fill: false
 				}, {
 					label: "Dataset with point data",
 					data: [{
@@ -85,15 +154,14 @@
 			options: {
 				responsive: true,
 				title:{
-					display:true,
+					display: true,
 					text:"Chart.js Time Scale"
 				},
 				scales: {
 					xAxes: [{
 						type: "time",
 						time: {
-							format: timeFormat,
-							// round: 'day'
+							parser: timeFormat,
 							tooltipFormat: 'll HH:mm'
 						},
 						scaleLabel: {
@@ -102,23 +170,43 @@
 						},
 						ticks: {
 							maxRotation: 0
+						},
+						gridLines: {
+							drawBorder: false,
+							color: 'rgba(0,0,0,0.03)'
 						}
 					}, ],
 					yAxes: [{
+						id: 'test',
 						scaleLabel: {
 							display: true,
 							labelString: 'value'
+						},
+						ticks: {
+							min: undefined,
+							max: undefined,
+							suggestedMax: 1.01,
+							suggestedMin: -1.01
+						},
+						gridLines: {
+							drawBorder: false,
+							color: 'rgba(0,0,0,0.1)'
 						}
 					}]
+				},
+				pan: {
+					enabled: true
 				},
 				zoom: {
 					enabled: true,
 					drag: true,
-					mode: 'x',
+					mode: 'xy',
 					limits: {
 						max: 10,
 						min: 0.5
-					}
+					},
+					zoomStrength: 30,
+					axisOnlyZoom: true
 				}
 			}
 		};
@@ -134,7 +222,6 @@
 		window.onload = function() {
 			var ctx = document.getElementById("canvas").getContext("2d");
 			window.myLine = new Chart(ctx, config);
-
 		};
 	</script>
 </body>

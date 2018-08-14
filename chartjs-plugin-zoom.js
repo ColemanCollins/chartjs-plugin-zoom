@@ -355,21 +355,38 @@ var zoomPlugin = {
 			scale.originalOptions = helpers.clone(scale.options);
 		});
 
-		chartInstance.resetZoom = function() {
+		chartInstance.resetZoom = function(newZoom) {
+			newZoom = newZoom || {};
 			helpers.each(chartInstance.scales, function(scale, id) {
-				var timeOptions = scale.options.time;
-				var tickOptions = scale.options.ticks;
-				var origOptions = scale.originalOptions;
+				var timeOptions = scale.options.time   || {};
+				var tickOptions = scale.options.ticks  || {};
+				var origTimeOptions = scale.originalOptions.time;
+				var origTickOptions = scale.originalOptions.ticks;
 
 				if (timeOptions) {
-					timeOptions.min = origOptions.time.min;
-					timeOptions.max = origOptions.time.max;
+					timeOptions.min = origTimeOptions.min;
+					timeOptions.max = origTimeOptions.max;
 				}
 
 				if (tickOptions) {
-					tickOptions.min = origOptions.ticks.min;
-					tickOptions.max = origOptions.ticks.max;
+					tickOptions.min = origTickOptions.min;
+					tickOptions.max = origTickOptions.max;
 				}
+
+				if (newZoom[id]) {
+					var newTimeOptions  = newZoom[id].time 	 || {};
+					timeOptions.min = newTimeOptions.min === undefined 
+														? (timeOptions ? origTimeOptions.min : undefined) 
+														: newTimeOptions.min;
+					timeOptions.max = newTimeOptions.max === undefined 
+														? (timeOptions ? origTimeOptions.max : undefined) 
+														: newTimeOptions.max;
+
+					var newTickOptions  = newZoom[id].ticks  || {};
+					tickOptions.min = newTickOptions.min === undefined ? (tickOptions ? origTimeOptions.min : undefined) : newTickOptions.min;
+					tickOptions.max = newTickOptions.max === undefined ? (tickOptions ? origTimeOptions.max : undefined) : newTickOptions.max;
+				}
+
 			});
 
 			helpers.each(chartInstance.data.datasets, function(dataset, id) {
@@ -429,18 +446,27 @@ var zoomPlugin = {
 			return;
 		}
 		if (options.zoom.drag) {
+
 			chartInstance.zoom._mouseDownHandler = function(event) {
-				chartInstance.zoom._dragZoomStart = event;
+				//if pan is enabled, do drag zoom on RMB click
+				if (!options.pan.enabled || (options.pan.enabled && event.button === 2)) {
+					chartInstance.zoom._dragZoomStart = event;
+				}
 			};
 			node.addEventListener('mousedown', chartInstance.zoom._mouseDownHandler);
+			//if we want drag zooming and panning at the, kill the default context
+			//menu on the chart so we can bind RMB without issues.
+			if (options.pan.enabled) {
+				node.addEventListener('contextmenu', function(event) {
+					event.preventDefault();
+				});
+			}
 
 			chartInstance.zoom._mouseMoveHandler = function(event){
 				if (chartInstance.zoom._dragZoomStart) {
 					chartInstance.zoom._dragZoomEnd = event;
 					chartInstance.update(0);
 				}
-
-				chartInstance.update(0);
 			};
 			node.addEventListener('mousemove', chartInstance.zoom._mouseMoveHandler);
 
@@ -476,40 +502,78 @@ var zoomPlugin = {
 					var chartDistanceY = chartArea.bottom - chartArea.top;
 					var zoomY = 1 + ((chartDistanceY - dragDistanceY) / chartDistanceY );
 
+					chartInstance.zoom._dragZoomStart = null;
+					chartInstance.zoom._dragZoomEnd = null;
+
 					if (dragDistanceX > 0 || dragDistanceY > 0) {
 						doZoom(chartInstance, zoomX, zoomY, {
 							x: dragDistanceX / 2 + startX,
 							y: dragDistanceY / 2 + startY,
 						});
 					}
-
-					chartInstance.zoom._dragZoomStart = null;
-					chartInstance.zoom._dragZoomEnd = null;
 				}
 			};
 			node.addEventListener('mouseup', chartInstance.zoom._mouseUpHandler);
-		} else {
-			chartInstance.zoom._wheelHandler = function(event) {
+		}
+
+		chartInstance.zoom._wheelHandler = function(event) {
+				var zoomOptions = chartInstance.options.zoom;
 				var rect = event.target.getBoundingClientRect();
 				var offsetX = event.clientX - rect.left;
 				var offsetY = event.clientY - rect.top;
-
 				var center = {
 					x : offsetX,
 					y : offsetY
 				};
 
-				if (event.deltaY < 0) {
-					doZoom(chartInstance, 1.1, 1.1, center);
-				} else {
-					doZoom(chartInstance, 0.909, 0.909, center);
+				var zoomInDirection = function zoomInDirection(direction) {
+					var zoomStrength = options.zoom.zoomStrength / 1000;
+					var yZoomIn = (direction === 'y' || 'xy') ? (1 + zoomStrength) : 1 ;
+					var yZoomOut = (direction === 'y' || 'xy') ? (1 - zoomStrength) : 1;
+					var xZoomIn = (direction === 'x' || 'xy') ? (1 + zoomStrength) : 1;
+					var xZoomOut = (direction === 'x' || 'xy') ? (1 - zoomStrength) : 1;
+					if (event.deltaY < 0) { doZoom(chartInstance, xZoomIn, yZoomIn, center) }
+					else { doZoom(chartInstance, xZoomOut, yZoomOut, center) };
 				}
+
+				if (zoomOptions.axisHoverZoom) {
+					var isHoveringOnHorizontalAxis = false;
+					var isHoveringOnVerticalAxis = false;
+
+					var scales = chartInstance.scales;
+					//for all of the registered scales
+					for (var scaleID in scales) {
+						var scale = scales[scaleID];
+						var axisTop = scale.top;
+						var axisBottom = scale.bottom;
+						var axisRight = scale.right;
+						var axisLeft = scale.left;
+
+						//check if our hover point is within the axis' zone
+						if (offsetY >= axisTop && offsetY <= axisBottom && 
+								offsetX >= axisLeft && offsetX <= axisRight ) {
+								isHoveringOnHorizontalAxis = scale.isHorizontal() ? true : false;
+								isHoveringOnVerticalAxis = scale.isHorizontal() ? false : true;
+						}
+					}
+
+					if (isHoveringOnHorizontalAxis) {
+						zoomInDirection('x');
+					} else if (isHoveringOnVerticalAxis) {
+						zoomInDirection('y');
+					} else {
+						zoomInDirection('xy');
+					}
+
+				} else {
+					zoomInDirection('xy');
+				}
+
 				// Prevent the event from triggering the default behavior (eg. Content scrolling).
 				event.preventDefault();
-			};
+		};
 
-			node.addEventListener('wheel', chartInstance.zoom._wheelHandler);
-		}
+		node.addEventListener('wheel', chartInstance.zoom._wheelHandler);
 
 		if (Hammer) {
 			var mc = new Hammer.Manager(node);
@@ -637,7 +701,7 @@ var zoomPlugin = {
 			var dragOptions = chartInstance.options.zoom.drag;
  
  			ctx.fillStyle = dragOptions.backgroundColor || 'rgba(225,225,225,0.3)';
-			ctx.fillRect(startX, yAxis.top, rectWidth, yAxis.bottom - yAxis.top);
+			ctx.fillRect(startX, startY, rectWidth, rectHeight);
 
 			if (dragOptions.borderWidth > 0) {
 				ctx.lineWidth = dragOptions.borderWidth;
