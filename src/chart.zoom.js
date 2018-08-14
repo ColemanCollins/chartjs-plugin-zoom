@@ -28,7 +28,8 @@ var defaultOptions = zoomNS.defaults = {
 	zoom: {
 		enabled: true,
 		mode: 'xy',
-		sensitivity: 3
+		sensitivity: 3,
+		zoomStrength: 30
 	}
 };
 
@@ -429,22 +430,25 @@ var zoomPlugin = {
 		var node = chartInstance.zoom.node = chartInstance.chart.ctx.canvas;
 
 		var options = chartInstance.options;
+
 		var panThreshold = helpers.getValueOrDefault(options.pan ? options.pan.threshold : undefined, zoomNS.defaults.pan.threshold);
 		if (!options.zoom || !options.zoom.enabled) {
 			return;
 		}
-		if (options.zoom.drag) {
+		if (options.zoom && options.zoom.drag) {
 
 			chartInstance.zoom._mouseDownHandler = function(event) {
 				//if pan is enabled, do drag zoom on RMB click
-				if (!options.pan.enabled || (options.pan.enabled && event.button === 2)) {
+				//doing the undef check here because otherwise the if statements get too wild.
+				var panOptions = options.pan || {};
+				if (!panOptions.enabled || (panOptions.enabled && event.button === 2)) {
 					chartInstance.zoom._dragZoomStart = event;
 				}
 			};
 			node.addEventListener('mousedown', chartInstance.zoom._mouseDownHandler);
 			//if we want drag zooming and panning at the, kill the default context
 			//menu on the chart so we can bind RMB without issues.
-			if (options.pan.enabled) {
+			if (options.pan && options.pan.enabled) {
 				node.addEventListener('contextmenu', function(event) {
 					event.preventDefault();
 				});
@@ -515,13 +519,11 @@ var zoomPlugin = {
 				};
 
 				var zoomInDirection = function zoomInDirection(direction) {
-					var zoomStrength = options.zoom.zoomStrength / 1000;
-					var yZoomIn = (direction === 'y' || 'xy') ? (1 + zoomStrength) : 1 ;
-					var yZoomOut = (direction === 'y' || 'xy') ? (1 - zoomStrength) : 1;
-					var xZoomIn = (direction === 'x' || 'xy') ? (1 + zoomStrength) : 1;
-					var xZoomOut = (direction === 'x' || 'xy') ? (1 - zoomStrength) : 1;
-					if (event.deltaY < 0) { doZoom(chartInstance, xZoomIn, yZoomIn, center) }
-					else { doZoom(chartInstance, xZoomOut, yZoomOut, center) };
+					var zoomStrength = helpers.getValueOrDefault(zoomOptions.zoomStrength, defaultOptions.zoom.zoomStrength)/1000;
+					var zoomIn = 1 + zoomStrength;
+					var zoomOut = 1 - zoomStrength;
+					if (event.deltaY < 0) { doZoom(chartInstance, zoomIn, zoomIn, center, direction) }
+					else { doZoom(chartInstance, zoomOut, zoomOut, center, direction) };
 				}
 
 				if (zoomOptions.axisHoverZoom) {
