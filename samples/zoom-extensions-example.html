@@ -1,0 +1,248 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>Line Chart</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+  <script src="../node_modules/chart.js/dist/Chart.js"></script>
+  <script src="../node_modules/hammerjs/hammer.min.js"></script>
+  <script src="../chartjs-plugin-zoom.js"></script>
+  <style>
+  canvas {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+  }
+  </style>
+</head>
+
+<body>
+  <div style="width:75%;">
+    Y:<button onclick="scaleY('0A')">0A</button>
+    <button onclick="scaleY('A')">A</button>
+    <button onclick="scaleY('01')">01</button>
+    <br/>
+    <br/>
+    X: <button onclick="scaleY('AX')">AX</button>
+    <canvas id="canvas"></canvas>
+  </div>
+  <script>
+    var timeFormat = 'MM/DD/YYYY HH:mm';
+
+    function randomScalingFactor() {
+      return Math.random() * 1 * (Math.random() > 0.5 ? -1 : 1);
+    }
+
+    function randomColor(opacity) {
+      var colors = ['0,0,0', '50,50,50', '100,100,100', '150,150,150', '200,200,200']
+      return 'rgba(' + colors[Math.floor(Math.random() * 5)] + ',' + (opacity || '.3') + ')';
+    }
+
+    function newDate(days) {
+      return moment().add(days, 'd').toDate();
+    }
+
+    function newDateString(days) {
+      return moment().add(days, 'd').format(timeFormat);
+    }
+
+    function newTimestamp(days) {
+      return moment().add(days, 'd').unix();
+    }
+
+    function scaleY(type) {
+      const chart = window.myLine;
+      switch(type) {
+        case('01'):
+          chart.options.scales.yAxes[0].ticks.min = 0;
+          chart.options.scales.yAxes[0].ticks.max = 1;
+          chart.update({
+            duration: 400
+          });
+          break;
+        case('0A'):
+          chart.options.scales.yAxes[0].ticks.min = 0;
+          chart.options.scales.yAxes[0].ticks.max = undefined;
+          chart.update({
+            duration: 400
+          });
+          break;
+        case('AX'):
+          chart.options.scales.xAxes[0].ticks.min = undefined;
+          chart.options.scales.xAxes[0].ticks.max = undefined;
+          chart.update({
+            duration: 400
+          });
+          break;
+        case('A'):
+        default:
+          chart.options.scales.yAxes[0].ticks.min = undefined;
+          chart.options.scales.yAxes[0].ticks.max = undefined;
+          chart.update({
+            duration: 400
+          });
+          break;
+      }
+    }
+
+    var config = {
+      type: 'line',
+      data: {
+        datasets: [{
+          label: "My First dataset",
+          data: [
+          {
+            x: 10, 
+            y: randomScalingFactor()
+          },
+          {
+            x: 12, 
+            y: randomScalingFactor()
+          },
+          {
+            x: 14, 
+            y: randomScalingFactor()
+          },
+          {
+            x: 16, 
+            y:  randomScalingFactor()
+          },
+          {
+            x: 18, 
+            y: randomScalingFactor()
+          },
+          {
+            x: 20, 
+            y: randomScalingFactor()
+          },
+          {
+            x: 22, 
+            y: randomScalingFactor()
+          }],
+          fill: false,
+          borderDash: [5, 5],
+        }, 
+        {
+          label: "My Second dataset",
+          data:  [
+          {
+            x: 14, 
+            y: randomScalingFactor()
+          },
+          {
+            x: 15, 
+            y: randomScalingFactor()
+          },
+          {
+            x: 16, 
+            y: randomScalingFactor()
+          },
+          {
+            x: 17, 
+            y:  randomScalingFactor()
+          },
+          {
+            x: 18, 
+            y: randomScalingFactor()
+          },
+          {
+            x: 19, 
+            y: randomScalingFactor()
+          },
+          {
+            x: 25, 
+            y: randomScalingFactor()
+          }],
+          fill: false
+        }, {
+          label: "Dataset with point data",
+          data: [{
+            x: 10,
+            y: randomScalingFactor()
+          }, {
+            x: 15,
+            y: randomScalingFactor()
+          }, {
+            x: 17,
+            y: randomScalingFactor()
+          }, {
+            x: 30,
+            y: randomScalingFactor()
+          }],
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        title:{
+          display: true,
+          text:"Chart.js Time Scale"
+        },
+        scales: {
+          xAxes: [{
+            type: "linear",
+            scaleLabel: {
+              display: true,
+              labelString: 'Date'
+            },
+            ticks: {
+              maxRotation: 0,
+              min: undefined,
+              max: undefined
+            },
+            gridLines: {
+              drawBorder: false,
+              color: 'rgba(0,0,0,0.03)'
+            }
+          }, ],
+          yAxes: [{
+            id: 'test',
+            scaleLabel: {
+              display: true,
+              labelString: 'value'
+            },
+            ticks: {
+              min: undefined,
+              max: undefined,
+              suggestedMax: 1.01,
+              suggestedMin: -1.01
+            },
+            gridLines: {
+              drawBorder: false,
+              color: 'rgba(0,0,0,0.1)'
+            }
+          }]
+        },
+        pan: {
+          enabled: true
+        },
+        zoom: {
+          enabled: true,
+          drag: true,
+          mode: 'xy',
+          limits: {
+            max: 10,
+            min: 0.5
+          },
+          zoomStrength: 30,
+          axisOnlyZoom: true
+        }
+      }
+    };
+
+    config.data.datasets.forEach(function(dataset) {
+      dataset.borderColor = randomColor(0.4);
+      dataset.backgroundColor = randomColor(0.5);
+      dataset.pointBorderColor = randomColor(0.7);
+      dataset.pointBackgroundColor = randomColor(0.5);
+      dataset.pointBorderWidth = 1;
+    });
+
+    window.onload = function() {
+      var ctx = document.getElementById("canvas").getContext("2d");
+      window.myLine = new Chart(ctx, config);
+    };
+  </script>
+</body>
+
+</html>
