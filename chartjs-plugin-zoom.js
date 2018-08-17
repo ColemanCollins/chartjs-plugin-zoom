@@ -522,6 +522,14 @@ var zoomPlugin = {
 
 		chartInstance.zoom._wheelHandler = function(event) {
 				var zoomOptions = chartInstance.options.zoom;
+				// Prevent the event from triggering the default behavior (eg. Content scrolling).
+				if (zoomOptions.enabled) {
+					event.preventDefault();
+				} else {
+				// if no zooming, no need to continue.
+					return;
+				}
+
 				var rect = event.target.getBoundingClientRect();
 				var offsetX = event.clientX - rect.left;
 				var offsetY = event.clientY - rect.top;
@@ -570,9 +578,6 @@ var zoomPlugin = {
 				} else {
 					zoomInDirection('xy');
 				}
-
-				// Prevent the event from triggering the default behavior (eg. Content scrolling).
-				event.preventDefault();
 		};
 
 		node.addEventListener('wheel', chartInstance.zoom._wheelHandler);
