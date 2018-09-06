@@ -439,9 +439,8 @@ var zoomPlugin = {
 
 			chartInstance.zoom._mouseDownHandler = function(event) {
 				//if pan is enabled, do drag zoom on RMB click
-				//doing the undef check here because otherwise the if statements get too wild.
-				var panOptions = options.pan || {};
-				if (!panOptions.enabled || (panOptions.enabled && event.button === 2)) {
+				//do a live check to make sure panning hasn't been turned off since we attached the handler
+                if ((chartInstance.options.pan||{}).enabled && event.button === 2) {
 					chartInstance.zoom._dragZoomStart = event;
 				}
 			};
@@ -450,7 +449,10 @@ var zoomPlugin = {
 			//menu on the chart so we can bind RMB without issues.
 			if (options.pan && options.pan.enabled) {
 				node.addEventListener('contextmenu', function(event) {
-					event.preventDefault();
+                    //make sure panning is still enabled
+                    if ((chartInstance.options.pan||{}).enabled) {
+                        event.preventDefault();
+                    }
 				});
 			}
 
