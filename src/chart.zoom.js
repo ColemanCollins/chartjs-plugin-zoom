@@ -288,7 +288,7 @@ function positionInChartArea(chartInstance, position) {
 *  @param  id  An optional axis id. If specified, the function will look
 *  for the axis with that id. Otherwise, the first horizontal axis will be
 *  returned.
-*  @param  axis    An object of a `*Scale` class.
+*  @param  axis	An object of a `*Scale` class.
 **********************************************************************/
 function getXAxis( chartInstance, id ) {
 	var scales = chartInstance.scales;
@@ -309,7 +309,7 @@ function getXAxis( chartInstance, id ) {
 *  @param  id  An optional axis id. If specified, the function will look
 *  for the axis with that id. Otherwise, the first vertical axis will be
 *  returned.
-*  @param  axis    An object of a `*Scale` class.
+*  @param  axis	An object of a `*Scale` class.
 **********************************************************************/
 function getYAxis( chartInstance, id ) {
 	var scales = chartInstance.scales;
@@ -390,8 +390,8 @@ var zoomPlugin = {
 		*  @param  limits  An object of the form:
 		*  ~~~~
 		*  {
-		*      x: { min: 0, max: 10.1, axis_id: 'x-axis-1' },
-		*      y: { min: 1.34, max: 22.8, axis_id: 'y-axis-1' },
+		*	  x: { min: 0, max: 10.1, axis_id: 'x-axis-1' },
+		*	  y: { min: 1.34, max: 22.8, axis_id: 'y-axis-1' },
 		*  }
 		*  ~~~~
 		***************************************************************/
@@ -440,7 +440,7 @@ var zoomPlugin = {
 			chartInstance.zoom._mouseDownHandler = function(event) {
 				//if pan is enabled, do drag zoom on RMB click
 				//do a live check to make sure panning hasn't been turned off since we attached the handler
-                if ((chartInstance.options.pan||{}).enabled && event.button === 2) {
+				if ((chartInstance.options.pan||{}).enabled && event.button === 2) {
 					chartInstance.zoom._dragZoomStart = event;
 				}
 			};
@@ -449,10 +449,10 @@ var zoomPlugin = {
 			//menu on the chart so we can bind RMB without issues.
 			if (options.pan && options.pan.enabled) {
 				node.addEventListener('contextmenu', function(event) {
-                    //make sure panning is still enabled
-                    if ((chartInstance.options.pan||{}).enabled) {
-                        event.preventDefault();
-                    }
+					//make sure panning is still enabled
+					if ((chartInstance.options.pan||{}).enabled) {
+						event.preventDefault();
+					}
 				});
 			}
 
@@ -664,9 +664,9 @@ var zoomPlugin = {
 	},
 
 	beforeDatasetsDraw: function(chartInstance) {
-        if (!chartInstance.options.zoom || !chartInstance.options.zoom.enabled) {
-            return;
-        }
+		if (!chartInstance.options.zoom || !chartInstance.options.zoom.enabled) {
+			return;
+		}
 
 		var ctx = chartInstance.chart.ctx;
 		var chartArea = chartInstance.chartArea;
@@ -715,9 +715,9 @@ var zoomPlugin = {
 	},
 
 	afterDatasetsDraw: function(chartInstance) {
-        if (!chartInstance.options.zoom || !chartInstance.options.zoom.enabled) {
-            return;
-        }
+		if (!chartInstance.options.zoom || !chartInstance.options.zoom.enabled) {
+			return;
+		}
 		chartInstance.chart.ctx.restore();
 	},
 
