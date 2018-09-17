@@ -664,6 +664,10 @@ var zoomPlugin = {
 	},
 
 	beforeDatasetsDraw: function(chartInstance) {
+        if (!chartInstance.options.zoom || !chartInstance.options.zoom.enabled) {
+            return;
+        }
+
 		var ctx = chartInstance.chart.ctx;
 		var chartArea = chartInstance.chartArea;
 		ctx.save();
@@ -711,6 +715,9 @@ var zoomPlugin = {
 	},
 
 	afterDatasetsDraw: function(chartInstance) {
+        if (!chartInstance.options.zoom || !chartInstance.options.zoom.enabled) {
+            return;
+        }
 		chartInstance.chart.ctx.restore();
 	},
 
